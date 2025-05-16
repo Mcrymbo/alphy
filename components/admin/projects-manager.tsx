@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, Resolver } from "react-hook-form"
 import { z } from "zod"
 import { Plus, Trash, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -44,7 +44,7 @@ const formSchema = z.object({
   content: z.string().min(50, {
     message: "Content must be at least 50 characters.",
   }),
-  technologies: z.string().transform((val) => val.split(",").map((tech) => tech.trim())),
+   technologies: z.array(z.string()),
   date: z.string(),
   role: z.string(),
   liveUrl: z.string().url().optional().or(z.literal("")),
