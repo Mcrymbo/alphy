@@ -1,13 +1,11 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm, Resolver } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Plus, Trash, Upload } from "lucide-react"
+import { Plus, Trash, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -22,8 +20,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
-import { addProject, deleteProject, getProjects } from "@/lib/firebase/projects"
-import { uploadImage } from "@/lib/firebase/storage"
+import { addProject, deleteProject, getProjects } from "@/lib/supabase/projects"
+import { uploadImage } from "@/lib/supabase/storage"
 import type { Project } from "@/lib/types"
 
 const formSchema = z.object({
@@ -44,7 +42,9 @@ const formSchema = z.object({
   content: z.string().min(50, {
     message: "Content must be at least 50 characters.",
   }),
-   technologies: z.array(z.string()),
+  technologies: z.array(z.string()).min(1, {
+    message: "At least one technology is required.",
+  }),
   date: z.string(),
   role: z.string(),
   liveUrl: z.string().url().optional().or(z.literal("")),
@@ -57,16 +57,17 @@ export default function ProjectsManager() {
   const [isOpen, setIsOpen] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [techInput, setTechInput] = useState("")
   const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema) as Resolver<z.infer<typeof formSchema>>,
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       slug: "",
       description: "",
       content: "",
-      technologies: [] as string[],
+      technologies: [],
       date: new Date().toISOString().split("T")[0],
       role: "Full Stack Developer",
       liveUrl: "",
@@ -79,15 +80,13 @@ export default function ProjectsManager() {
       const projectsData = await getProjects()
       setProjects(projectsData)
     } catch (error) {
-      toast.error("",{
-        description: "Failed to load projects.",
-      })
+      toast.error(error.message)
     }
   }
 
-  useState(() => {
+  useEffect(() => {
     loadProjects()
-  })
+  }, [])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -103,11 +102,27 @@ export default function ProjectsManager() {
     reader.readAsDataURL(file)
   }
 
+  const handleAddTechnology = () => {
+    if (!techInput.trim()) return
+
+    const currentTech = form.getValues("technologies")
+    if (!currentTech.includes(techInput.trim())) {
+      form.setValue("technologies", [...currentTech, techInput.trim()])
+      setTechInput("")
+    }
+  }
+
+  const handleRemoveTechnology = (techToRemove: string) => {
+    const currentTech = form.getValues("technologies")
+    form.setValue(
+      "technologies",
+      currentTech.filter((tech) => tech !== techToRemove)
+    )
+  }
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!imageFile) {
-      toast.info("Image required",{
-        description: "Please upload a project image.",
-      })
+      toast.info("Please upload a project image.")
       return
     }
 
@@ -123,9 +138,7 @@ export default function ProjectsManager() {
         image: imageUrl,
       })
 
-      toast.success('',{
-        description: "Project added successfully.",
-      })
+      toast.success("Project added successfully.")
 
       // Reset form and close dialog
       form.reset()
@@ -137,9 +150,7 @@ export default function ProjectsManager() {
       await loadProjects()
       router.refresh()
     } catch (error) {
-      toast.error('',{
-        description: "Failed to add project. Please try again.",
-      })
+      toast.error(error.message)
     } finally {
       setIsLoading(false)
     }
@@ -150,18 +161,11 @@ export default function ProjectsManager() {
 
     try {
       await deleteProject(id)
-
-      toast.success('',{
-        description: "Project deleted successfully.",
-      })
-
-      // Refresh projects list
+      toast.success("Project deleted successfully.")
       await loadProjects()
       router.refresh()
     } catch (error) {
-      toast.error('',{
-        description: "Failed to delete project. Please try again.",
-      })
+      toast.error(error.message)
     }
   }
 
@@ -250,7 +254,45 @@ export default function ProjectsManager() {
                       <FormItem>
                         <FormLabel>Technologies</FormLabel>
                         <FormControl>
-                          <Input placeholder="React, Next.js, Tailwind CSS" {...field} />
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Add technology..."
+                                value={techInput}
+                                onChange={(e) => setTechInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault()
+                                    handleAddTechnology()
+                                  }
+                                }}
+                              />
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={handleAddTechnology}
+                              >
+                                Add
+                              </Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {field.value.map((tech) => (
+                                <div
+                                  key={tech}
+                                  className="flex items-center gap-1 px-3 py-1 bg-muted rounded-full text-sm"
+                                >
+                                  {tech}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveTechnology(tech)}
+                                    className="text-muted-foreground hover:text-destructive"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -297,7 +339,7 @@ export default function ProjectsManager() {
                         {imagePreview ? (
                           <div className="relative w-full h-full">
                             <img
-                              src={imagePreview || "/placeholder.svg"}
+                              src={imagePreview}
                               alt="Preview"
                               className="w-full h-full object-cover rounded-md"
                             />
@@ -370,7 +412,9 @@ export default function ProjectsManager() {
 
         <div className="divide-y">
           {projects.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">No projects found. Add your first project.</div>
+            <div className="p-4 text-center text-muted-foreground">
+              No projects found. Add your first project.
+            </div>
           ) : (
             projects.map((project) => (
               <div key={project.id} className="grid grid-cols-4 gap-4 p-4 items-center">
@@ -380,7 +424,11 @@ export default function ProjectsManager() {
                 </div>
                 <div>{project.date}</div>
                 <div className="flex justify-end">
-                  <Button variant="ghost" size="icon" onClick={() => handleDeleteProject(project.id)}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDeleteProject(project.id)}
+                  >
                     <Trash size={16} className="text-destructive" />
                   </Button>
                 </div>

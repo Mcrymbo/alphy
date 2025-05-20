@@ -2,7 +2,7 @@ import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ProjectCard from "@/components/project-card"
-import { getProjects } from "@/lib/firebase/projects"
+import { getProjects } from "@/lib/supabase/projects"
 
 export default async function ProjectsShowcase() {
   const projects = await getProjects()
@@ -10,7 +10,7 @@ export default async function ProjectsShowcase() {
 
   return (
     <section id="projects" className="py-20 bg-muted/30">
-      <div className="container px-4 md:px-6">
+      <div className="container mx-auto px-4 md:px-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
           <div>
             <h2 className="text-3xl font-bold tracking-tight mb-4">Featured Projects</h2>

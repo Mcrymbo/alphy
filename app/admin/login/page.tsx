@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 import LoginForm from "@/components/admin/login-form"
-import { getCurrentUser } from "@/lib/firebase/auth"
+import { getCurrentUser } from "@/lib/supabase/auth"
 
 export const metadata: Metadata = {
   title: "Admin Login | Alphonce Mcrymbo",

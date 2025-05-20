@@ -17,7 +17,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div>
               <p className="text-lg mb-4">
-                I'm Alphonce Mcrymbo, a passionate Full Stack Developer with 3 years of active development experience. I
+                I&apos;m Alphonce Mcrymbo, a passionate Full Stack Developer with 3 years of active development experience. I
                 specialize in building robust web applications using modern technologies.
               </p>
               <p className="text-lg mb-6">
@@ -66,7 +66,7 @@ export default function Home() {
       </section>
 
       <SkillsSection />
-      {/* <ProjectsShowcase /> */}
+      <ProjectsShowcase />
       <ContactSection />
     </main>
   )

@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
-import { submitContactForm } from "@/lib/firebase/contact"
+import { submitContactForm } from "@/lib/supabase/contact"
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -57,6 +57,7 @@ export default function ContactForm() {
       toast.error("Something went wrong.",{
         description: "Your message couldn't be sent. Please try again later.",
       })
+      console.error(error.message)
     } finally {
       setIsSubmitting(false)
     }

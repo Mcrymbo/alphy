@@ -6,7 +6,7 @@ import { Trash } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
-import { getMessages, deleteMessage } from "@/lib/firebase/contact"
+import { getMessages, deleteMessage } from "@/lib/supabase/contact"
 import type { ContactMessage } from "@/lib/types"
 
 export default function MessagesManager() {
@@ -17,11 +17,10 @@ export default function MessagesManager() {
     setIsLoading(true)
     try {
       const messagesData = await getMessages()
+      console.log(messagesData)
       setMessages(messagesData)
     } catch (error) {
-      toast.error('',{
-        description: "Failed to load messages. Please check your Firebase permissions.",
-      })
+      toast.error(error.message)
     } finally {
       setIsLoading(false)
     }
@@ -44,9 +43,7 @@ export default function MessagesManager() {
       // Refresh messages list
       await loadMessages()
     } catch (error) {
-      toast.error('',{
-        description: "Failed to delete message. Please check your Firebase permissions.",
-      })
+      toast.error(error.message)
     }
   }
 

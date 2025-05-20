@@ -22,7 +22,7 @@ export default function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
-              Hi, I'm <span className="text-primary">Alphonce Mcrymbo</span>
+              Hi, I&apos;m <span className="text-primary">Alphonce Mcrymbo</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-6">
               Full Stack Developer with expertise in Django, Flask, React, Next.js, and Tailwind CSS
@@ -46,7 +46,7 @@ export default function HeroSection() {
 
             <div className="flex items-center gap-4 mt-8">
               <a
-                href="https://github.com/"
+                href="https://github.com/mcrymbo/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-secondary p-2 rounded-full hover:bg-secondary/80 transition-colors"
@@ -55,7 +55,7 @@ export default function HeroSection() {
                 <Github size={20} />
               </a>
               <a
-                href="https://linkedin.com/"
+                href="https://linkedin.com/in/mcrymbo"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-secondary p-2 rounded-full hover:bg-secondary/80 transition-colors"
@@ -64,7 +64,7 @@ export default function HeroSection() {
                 <Linkedin size={20} />
               </a>
               <a
-                href="mailto:alphonce@example.com"
+                href="mailto:amcrymbo@gmail.com"
                 className="bg-secondary p-2 rounded-full hover:bg-secondary/80 transition-colors"
                 aria-label="Email"
               >
@@ -76,7 +76,7 @@ export default function HeroSection() {
           <div className="relative flex justify-center lg:justify-end">
             <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-primary/20">
               <Image
-                src="/placeholder.svg?height=320&width=320"
+                src="/alphy.png?height=320&width=320"
                 alt="Alphonce Mcrymbo"
                 fill
                 className="object-cover"

@@ -1,53 +1,58 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { toast } from "sonner"
-import { signIn } from "@/lib/firebase/auth"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+
+import { loginAction } from "@/app/admin/login/actions";        // ✅ server‑action import
+
+/* ────────────── validation schema ────────────── */
 const formSchema = z.object({
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
   password: z.string().min(6, {
     message: "Password must be at least 6 characters.",
   }),
-})
+});
+type FormValues = z.infer<typeof formSchema>;
 
 export default function LoginForm() {
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  })
+    defaultValues: { email: "", password: "" },
+  });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-
+  /* ────────────── submit handler ────────────── */
+  const onSubmit = async (values: FormValues) => {
+    setIsLoading(true);
     try {
-      await signIn(values.email, values.password)
-      router.push("/admin")
-      router.refresh()
-    } catch (error) {
-      toast.error("Authentication failed",{
-        description: "Invalid email or password. Please try again.",
-      })
+      await loginAction(values.email, values.password);   // 🔑 runs server‑side
+      router.push("/admin");
+      router.refresh();
+    } catch (err) {
+      toast.error(err.message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
+  /* ────────────── UI ────────────── */
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -80,9 +85,9 @@ export default function LoginForm() {
         />
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign In"}
+          {isLoading ? "Signing in…" : "Sign In"}
         </Button>
       </form>
     </Form>
-  )
+  );
 }

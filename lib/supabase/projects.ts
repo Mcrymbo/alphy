@@ -1,7 +1,6 @@
 "use server"
 
-import { collection, getDocs, doc, addDoc, deleteDoc, query, where, orderBy } from "firebase/firestore"
-import { db } from "./config"
+import { createServerSupabaseClient } from "./auth"
 import type { Project } from "@/lib/types"
 
 // Sample projects data to use as fallback
@@ -11,9 +10,9 @@ const sampleProjects: Omit<Project, "id">[] = [
     slug: "e-commerce-platform",
     description: "A full-featured e-commerce platform with product management, cart, and checkout functionality.",
     content:
-      "This project is a comprehensive e-commerce solution built with Next.js and Firebase. It includes features like product catalog, shopping cart, user authentication, and payment processing with Stripe.\n\nThe frontend is built with React and styled with Tailwind CSS, providing a responsive and intuitive user interface. The backend uses Firebase for data storage, authentication, and serverless functions.",
+      "This project is a comprehensive e-commerce solution built with Next.js and Supabase. It includes features like product catalog, shopping cart, user authentication, and payment processing with Stripe.\n\nThe frontend is built with React and styled with Tailwind CSS, providing a responsive and intuitive user interface. The backend uses Supabase for data storage, authentication, and serverless functions.",
     image: "/placeholder.svg?height=600&width=800",
-    technologies: ["Next.js", "React", "Firebase", "Tailwind CSS", "Stripe"],
+    technologies: ["Next.js", "React", "Supabase", "Tailwind CSS", "Stripe"],
     date: "2023-04-15",
     role: "Full Stack Developer",
     liveUrl: "https://example.com/ecommerce",
@@ -39,7 +38,7 @@ const sampleProjects: Omit<Project, "id">[] = [
     content:
       "This portfolio website was built using Next.js and Tailwind CSS to showcase my projects and skills. It features a clean, responsive design with dark mode support and smooth animations.\n\nThe site includes sections for projects, skills, resume, and contact information. It's optimized for performance and SEO, achieving high scores on Lighthouse audits.",
     image: "/placeholder.svg?height=600&width=800",
-    technologies: ["Next.js", "Tailwind CSS", "Firebase", "Framer Motion"],
+    technologies: ["Next.js", "Tailwind CSS", "Supabase", "Framer Motion"],
     date: "2023-01-10",
     role: "Full Stack Developer",
     liveUrl: "https://example.com/portfolio",
@@ -49,22 +48,24 @@ const sampleProjects: Omit<Project, "id">[] = [
 
 export async function getProjects(): Promise<Project[]> {
   try {
-    const projectsRef = collection(db, "projects")
-    const q = query(projectsRef, orderBy("date", "desc"))
-    const querySnapshot = await getDocs(q)
+    const supabase = await createServerSupabaseClient()
 
-    if (querySnapshot.empty) {
-      console.log("No projects found in Firestore, using sample data")
+    const { data, error } = await supabase.from("projects").select("*").order("date", { ascending: false })
+
+    if (error) {
+      console.error("Error getting projects:", error)
+      throw error
+    }
+
+    if (!data || data.length === 0) {
+      console.log("No projects found in Supabase, using sample data")
       return sampleProjects.map((project, index) => ({
         id: `sample-${index}`,
         ...project,
       }))
     }
 
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Project[]
+    return data as Project[]
   } catch (error) {
     console.error("Error getting projects:", error)
     console.log("Using sample projects data due to error")
@@ -78,27 +79,28 @@ export async function getProjects(): Promise<Project[]> {
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   try {
-    const projectsRef = collection(db, "projects")
-    const q = query(projectsRef, where("slug", "==", slug))
-    const querySnapshot = await getDocs(q)
+    const supabase = await createServerSupabaseClient()
 
-    if (querySnapshot.empty) {
-      // Try to find the project in sample data
-      const sampleProject = sampleProjects.find((p) => p.slug === slug)
-      if (sampleProject) {
-        return {
-          id: `sample-${slug}`,
-          ...sampleProject,
+    const { data, error } = await supabase.from("projects").select("*").eq("slug", slug).single()
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        // No rows returned - try to find in sample data
+        const sampleProject = sampleProjects.find((p) => p.slug === slug)
+        if (sampleProject) {
+          return {
+            id: `sample-${slug}`,
+            ...sampleProject,
+          }
         }
+        return null
       }
-      return null
+
+      console.error("Error getting project by slug:", error)
+      throw error
     }
 
-    const projectDoc = querySnapshot.docs[0]
-    return {
-      id: projectDoc.id,
-      ...projectDoc.data(),
-    } as Project
+    return data as Project
   } catch (error) {
     console.error("Error getting project by slug:", error)
     // Try to find the project in sample data
@@ -115,12 +117,19 @@ export async function getProjectBySlug(slug: string): Promise<Project | null> {
 
 export async function addProject(projectData: Omit<Project, "id">): Promise<string> {
   try {
-    const projectsRef = collection(db, "projects")
-    const docRef = await addDoc(projectsRef, projectData)
-    return docRef.id
+    const supabase = await createServerSupabaseClient()
+
+    const { data, error } = await supabase.from("projects").insert(projectData).select().single()
+
+    if (error) {
+      console.error("Error adding project:", error)
+      throw error
+    }
+
+    return data.id
   } catch (error) {
     console.error("Error adding project:", error)
-    throw new Error("Failed to add project. Please check your Firebase permissions.")
+    throw new Error("Failed to add project. Please check your Supabase permissions.")
   }
 }
 
@@ -131,10 +140,16 @@ export async function deleteProject(id: string): Promise<void> {
       throw new Error("Cannot delete sample projects")
     }
 
-    const projectRef = doc(db, "projects", id)
-    await deleteDoc(projectRef)
+    const supabase = await createServerSupabaseClient()
+
+    const { error } = await supabase.from("projects").delete().eq("id", id)
+
+    if (error) {
+      console.error("Error deleting project:", error)
+      throw error
+    }
   } catch (error) {
     console.error("Error deleting project:", error)
-    throw new Error("Failed to delete project. Please check your Firebase permissions.")
+    throw new Error("Failed to delete project. Please check your Supabase permissions.")
   }
 }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { signOut } from "@/lib/firebase/auth"
+import { signOut } from "@/lib/supabase/auth"
 import ProjectsManager from "@/components/admin/projects-manager"
 import ResumeManager from "@/components/admin/resume-manager"
 import MessagesManager from "@/components/admin/messages-manager"
@@ -22,16 +22,14 @@ export default function AdminDashboard() {
       router.push("/")
       router.refresh()
     } catch (error) {
-      toast.error("Erro",{
-        description: "Failed to sign out. Please try again.",
-      })
+      toast.error(error.message)
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="container px-4 md:px-6 py-10">
+    <div className="container mx-auto px-4 md:px-6 py-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>

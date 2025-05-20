@@ -50,7 +50,7 @@ export default function SkillsSection() {
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold tracking-tight mb-4">My Skills</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            I've developed a diverse set of skills throughout my career as a Full Stack Developer.
+            I&apos;ve developed a diverse set of skills throughout my career as a Full Stack Developer.
           </p>
         </div>
 

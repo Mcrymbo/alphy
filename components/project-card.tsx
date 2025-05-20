@@ -14,10 +14,10 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     <Card className="overflow-hidden group">
       <div className="relative aspect-video overflow-hidden">
         <Image
-          src={project.image || "/placeholder.svg"}
+          src={project.image}
           alt={project.title}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-contain transition-transform duration-300 group-hover:scale-105 p-2"
         />
       </div>
 

@@ -1,11 +1,9 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm, Resolver } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { Plus, Save, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -14,8 +12,9 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
-import { getResumeData, updateResumeData } from "@/lib/firebase/resume"
-import { uploadFile } from "@/lib/firebase/storage"
+import { getResumeData, updateResumeData } from "@/lib/supabase/resume"
+// import { parseResumeFromBuffer } from "@/lib/supabase/resume-parser"
+import { uploadFile } from "@/lib/supabase/storage"
 
 const formSchema = z.object({
   experience: z.array(
@@ -52,36 +51,51 @@ const formSchema = z.object({
 export default function ResumeManager() {
   const [isLoading, setIsLoading] = useState(false)
   const [resumeFile, setResumeFile] = useState<File | null>(null)
+  const [initialLoad, setInitialLoad] = useState(true)
   const router = useRouter()
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema) as Resolver<z.infer<typeof formSchema>>,
-    defaultValues: async () => {
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      experience: [{ title: "", company: "", period: "", responsibilities: [""] }],
+      education: [{ degree: "", institution: "", period: "", description: "" }],
+      skills: { Frontend: [], Backend: [], Other: [] },
+      languages: [{ language: "", proficiency: "" }],
+      contact: { email: "", phone: "", location: "", website: "" },
+    }
+  })
+
+  // Load initial data
+  useEffect(() => {
+    const loadData = async () => {
       try {
         const resumeData = await getResumeData()
-        return resumeData
+        form.reset(resumeData)
       } catch (error) {
-        toast.error('',{
-          description: "Failed to load resume data.",
+        toast.error('', {
+          description: error.message,
         })
-        return {
-          experience: [{ title: "", company: "", period: "", responsibilities: [] }],
-          education: [{ degree: "", institution: "", period: "", description: "" }],
-          skills: { Frontend: [], Backend: [], Other: [] },
-          languages: [{ language: "", proficiency: "" }],
-          contact: { email: "", phone: "", location: "", website: "" },
-        }
+      } finally {
+        setInitialLoad(false)
       }
-    },
-  })
+    }
+    loadData()
+  }, [form])
 
   const handleResumeFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
     if (file.type !== "application/pdf") {
-      toast.info("Invalid file",{
+      toast.info("Invalid file", {
         description: "Please upload a PDF file.",
+      })
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.info("File too large", {
+        description: "Please upload a PDF smaller than 5MB.",
       })
       return
     }
@@ -101,18 +115,22 @@ export default function ResumeManager() {
         await uploadFile(resumeFile, "resume/cv.pdf")
       }
 
-      toast.success('',{
+      toast.success('', {
         description: "Resume updated successfully.",
       })
 
       router.refresh()
     } catch (error) {
-      toast.error('',{
-        description: "Failed to update resume. Please try again.",
+      toast.error('', {
+        description: error.message,
       })
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (initialLoad) {
+    return <div className="flex justify-center items-center h-64">Loading resume data...</div>
   }
 
   return (
@@ -127,17 +145,27 @@ export default function ResumeManager() {
           >
             <Upload size={16} />
             {resumeFile ? resumeFile.name : "Upload PDF"}
-            <input id="resume-file" type="file" accept=".pdf" className="hidden" onChange={handleResumeFileChange} />
+            <input 
+              id="resume-file" 
+              type="file" 
+              accept=".pdf" 
+              className="hidden" 
+              onChange={handleResumeFileChange} 
+            />
           </label>
 
-          <Button onClick={form.handleSubmit(onSubmit)} disabled={isLoading} className="gap-2">
+          <Button 
+            onClick={form.handleSubmit(onSubmit)} 
+            disabled={isLoading} 
+            className="gap-2"
+          >
             <Save size={16} /> {isLoading ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </div>
 
       <Form {...form}>
-        <form className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           {/* Experience Section */}
           <Card>
             <CardHeader>
@@ -197,12 +225,40 @@ export default function ResumeManager() {
                       <FormItem>
                         <FormLabel>Responsibilities</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Enter responsibilities (one per line)"
-                            className="min-h-[100px]"
-                            value={Array.isArray(field.value) ? field.value.join("\n") : field.value}
-                            onChange={(e) => field.onChange(e.target.value)}
-                          />
+                          <div className="space-y-2">
+                            {field.value.map((responsibility, respIndex) => (
+                              <div key={respIndex} className="flex gap-2">
+                                <Input
+                                  value={responsibility}
+                                  onChange={(e) => {
+                                    const newResponsibilities = [...field.value]
+                                    newResponsibilities[respIndex] = e.target.value
+                                    field.onChange(newResponsibilities)
+                                  }}
+                                  placeholder={`Responsibility ${respIndex + 1}`}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => {
+                                    const newResponsibilities = field.value.filter((_, i) => i !== respIndex)
+                                    field.onChange(newResponsibilities)
+                                  }}
+                                >
+                                  ×
+                                </Button>
+                              </div>
+                            ))}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full mt-2"
+                              onClick={() => field.onChange([...field.value, ""])}
+                            >
+                              Add Responsibility
+                            </Button>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -236,7 +292,7 @@ export default function ResumeManager() {
                   const experiences = form.getValues("experience")
                   form.setValue("experience", [
                     ...experiences,
-                    { title: "", company: "", period: "", responsibilities: [] },
+                    { title: "", company: "", period: "", responsibilities: [""] },
                   ])
                 }}
               >

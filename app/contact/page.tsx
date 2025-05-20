@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <main className="container px-4 md:px-6 py-12">
+    <main className="container mx-auto px-4 md:px-6 py-12">
       <h1 className="text-4xl font-bold tracking-tight mb-6">Get in Touch</h1>
       <p className="text-lg text-muted-foreground mb-10 max-w-3xl">
         Have a project in mind or want to discuss potential opportunities? Feel free to reach out!
@@ -31,7 +31,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-medium">Email</h3>
-                  <p className="text-muted-foreground">alphonce@example.com</p>
+                  <p className="text-muted-foreground">amcrymbo@gmail.com</p>
                 </div>
               </div>
 
@@ -41,7 +41,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-medium">Phone</h3>
-                  <p className="text-muted-foreground">+123 456 7890</p>
+                  <p className="text-muted-foreground">+254 05245 296</p>
                 </div>
               </div>
 
@@ -51,7 +51,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-medium">Location</h3>
-                  <p className="text-muted-foreground">Tanzania</p>
+                  <p className="text-muted-foreground">Nairobi - Kenya</p>
                 </div>
               </div>
             </div>
