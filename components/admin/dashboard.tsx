@@ -22,7 +22,11 @@ export default function AdminDashboard() {
       router.push("/")
       router.refresh()
     } catch (error) {
-      toast.error(error.message)
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("An unknown error occurred.")
+      }
     } finally {
       setIsLoading(false)
     }

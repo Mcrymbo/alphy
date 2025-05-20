@@ -20,7 +20,11 @@ export default function MessagesManager() {
       console.log(messagesData)
       setMessages(messagesData)
     } catch (error) {
-      toast.error(error.message)
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("An unknown error occurred.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -43,7 +47,11 @@ export default function MessagesManager() {
       // Refresh messages list
       await loadMessages()
     } catch (error) {
-      toast.error(error.message)
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("An unknown error occurred.")
+      }
     }
   }
 

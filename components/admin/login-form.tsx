@@ -45,8 +45,12 @@ export default function LoginForm() {
       await loginAction(values.email, values.password);   // 🔑 runs server‑side
       router.push("/admin");
       router.refresh();
-    } catch (err) {
-      toast.error(err.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("An unknown error occurred.")
+      }
     } finally {
       setIsLoading(false);
     }

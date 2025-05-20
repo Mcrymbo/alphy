@@ -1,44 +1,54 @@
-import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft, Github, Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { getProjectBySlug, getProjects } from "@/lib/supabase/projects";
+import type { Metadata } from "next"
+import Image from "next/image"
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { ArrowLeft, Github, Globe } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { getProjectBySlug, getProjects } from "@/lib/supabase/projects"
 
-interface Params {
-  slug: string;
+type Params = {
+  slug: string
 }
 
-export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const project = await getProjectBySlug(params.slug);
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params>
+}): Promise<Metadata> {
+  const resolvedParams = await params
+  const project = await getProjectBySlug(resolvedParams.slug)
 
   if (!project) {
     return {
       title: "Project Not Found",
-    };
+    }
   }
 
   return {
     title: `${project.title} | Alphonce Mcrymbo`,
     description: project.description,
-  };
+  }
 }
 
-export async function generateStaticParams(): Promise<Params[]> {
-  const projects = await getProjects();
+export async function generateStaticParams() {
+  const projects = await getProjects()
 
   return projects.map((project) => ({
     slug: project.slug,
-  }));
+  }))
 }
 
-export default async function ProjectPage({ params }: { params: Params }) {
-  const project = await getProjectBySlug(params.slug);
+export default async function ProjectPage({
+  params,
+}: {
+  params: Promise<Params>
+}) {
+  const resolvedParams = await params
+  const project = await getProjectBySlug(resolvedParams.slug)
 
   if (!project) {
-    notFound();
+    notFound()
   }
 
   return (
@@ -52,20 +62,14 @@ export default async function ProjectPage({ params }: { params: Params }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2">
           <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
-            <Image
-              src={project.image || "/placeholder.svg"}
-              alt={project.title}
-              fill
-              className="object-cover"
-              priority
-            />
+            <Image src={project.image || "/placeholder.svg"} alt={project.title} fill className="object-cover" />
           </div>
 
           <h1 className="text-4xl font-bold tracking-tight mb-4">{project.title}</h1>
 
           <div className="flex flex-wrap gap-2 mb-6">
-            {project.technologies.map((tech) => (
-              <Badge key={tech} variant="secondary">
+            {project.technologies.map((tech, index) => (
+              <Badge key={tech} variant={index % 2 === 0 ? "secondary" : "outline"}>
                 {tech}
               </Badge>
             ))}
@@ -116,5 +120,5 @@ export default async function ProjectPage({ params }: { params: Params }) {
         </div>
       </div>
     </main>
-  );
+  )
 }

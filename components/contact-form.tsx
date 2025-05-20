@@ -54,10 +54,11 @@ export default function ContactForm() {
       form.reset()
       router.refresh()
     } catch (error) {
-      toast.error("Something went wrong.",{
-        description: "Your message couldn't be sent. Please try again later.",
-      })
-      console.error(error.message)
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("An unknown error occurred.")
+      }
     } finally {
       setIsSubmitting(false)
     }

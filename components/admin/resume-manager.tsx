@@ -72,9 +72,11 @@ export default function ResumeManager() {
         const resumeData = await getResumeData()
         form.reset(resumeData)
       } catch (error) {
-        toast.error('', {
-          description: error.message,
-        })
+        if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("An unknown error occurred.")
+      }
       } finally {
         setInitialLoad(false)
       }
@@ -121,9 +123,11 @@ export default function ResumeManager() {
 
       router.refresh()
     } catch (error) {
-      toast.error('', {
-        description: error.message,
-      })
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("An unknown error occurred.")
+      }
     } finally {
       setIsLoading(false)
     }

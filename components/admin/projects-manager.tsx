@@ -80,7 +80,11 @@ export default function ProjectsManager() {
       const projectsData = await getProjects()
       setProjects(projectsData)
     } catch (error) {
-      toast.error(error.message)
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("An unknown error occurred.")
+      }
     }
   }
 
@@ -150,7 +154,11 @@ export default function ProjectsManager() {
       await loadProjects()
       router.refresh()
     } catch (error) {
-      toast.error(error.message)
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("An unknown error occurred.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -165,7 +173,11 @@ export default function ProjectsManager() {
       await loadProjects()
       router.refresh()
     } catch (error) {
-      toast.error(error.message)
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("An unknown error occurred.")
+      }
     }
   }
 
