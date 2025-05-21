@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import ProjectCard from "@/components/project-card"
 import { getProjects } from "@/lib/supabase/projects"
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: "Projects | Alphonce Mcrymbo",
   description: "Explore the projects developed by Alphonce Mcrymbo, a Full Stack Developer.",

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getProjectBySlug, getProjects } from "@/lib/supabase/projects"
 
+export const dynamic = 'force-dynamic';
+
 type Params = {
   slug: string
 }
@@ -51,10 +53,31 @@ export default async function ProjectPage({
     notFound()
   }
 
-  const imageSrc =
-    typeof project.image === "string"
-      ? project.image
-      : project.image?.url ?? "/placeholder.svg"
+  let imagePath: string | null = null;
+
+  try {
+    // Handle if image is already a URL string
+    if (typeof project.image === "string") {
+      // Try to parse if it's a JSON string
+      if (project.image.startsWith("{")) {
+        const parsed = JSON.parse(project.image);
+        imagePath = parsed?.url ?? null;
+      } else {
+        imagePath = project.image;
+      }
+    }
+
+    // Handle if it's a plain object
+    if (
+      typeof project.image === "object" &&
+      project.image !== null &&
+      typeof project.image.url === "string"
+    ) {
+      imagePath = project.image.url;
+    }
+  } catch (err) {
+    console.warn("Failed to parse image:", err);
+  }
 
   return (
     <main className="container mx-auto px-4 md:px-6 py-12">
@@ -67,7 +90,7 @@ export default async function ProjectPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2">
           <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
-             <Image src={imageSrc} alt={project.title} fill className="object-cover" />
+            {imagePath &&<Image src={imagePath} alt={project.title} fill className="object-cover" />}
           </div>
 
           <h1 className="text-4xl font-bold tracking-tight mb-4">{project.title}</h1>
