@@ -2,8 +2,10 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight, Download, Github, Linkedin, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getResumeFileUrl } from "@/lib/supabase/resume"
 
-export default function HeroSection() {
+export default async function HeroSection() {
+  const resumeFileUrl = await getResumeFileUrl()
   return (
     <section className="relative py-20 md:py-32 overflow-hidden">
       {/* Background Pattern */}
@@ -22,13 +24,10 @@ export default function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
-              Hi, I&apos;m <span className="text-primary">Alphonce Mcrymbo</span>
+              Delivering <span className="text-primary">Scalable, Impactful Solutions.</span>
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-6">
-              Full Stack Developer with expertise in Django, Flask, React, Next.js, and Tailwind CSS
-            </p>
-            <p className="text-lg mb-8">
-              I build robust, scalable, and user-friendly web applications that solve real-world problems.
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl">
+              I build intuitive frontends and robust backends that drive business growth and create seamless user experiences.
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -37,7 +36,7 @@ export default function HeroSection() {
                   View My Work <ArrowRight size={16} />
                 </Button>
               </Link>
-              <Link href="/resume">
+              <Link href={resumeFileUrl} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" variant="outline" className="gap-2">
                   Download CV <Download size={16} />
                 </Button>
