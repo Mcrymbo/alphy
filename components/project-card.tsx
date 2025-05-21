@@ -10,15 +10,47 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
+  let imagePath: string | null = null;
+
+  try {
+    // Handle if image is already a URL string
+    if (typeof project.image === "string") {
+      // Try to parse if it's a JSON string
+      if (project.image.startsWith("{")) {
+        const parsed = JSON.parse(project.image);
+        imagePath = parsed?.url ?? null;
+      } else {
+        imagePath = project.image;
+      }
+    }
+
+    // Handle if it's a plain object
+    if (
+      typeof project.image === "object" &&
+      project.image !== null &&
+      typeof project.image.url === "string"
+    ) {
+      imagePath = project.image.url;
+    }
+  } catch (err) {
+    console.warn("Failed to parse image:", err);
+  }
+  
   return (
     <Card className="overflow-hidden group">
       <div className="relative aspect-video overflow-hidden">
-        <Image
-          src={project.image}
-          alt={project.title}
-          fill
-          className="object-contain transition-transform duration-300 group-hover:scale-105 p-2"
-        />
+        {imagePath ? (
+          <Image
+            src={imagePath}
+            alt={project.title}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105 p-2"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+            <span className="text-gray-400">No image available</span>
+          </div>
+        )}
       </div>
 
       <CardContent className="p-6">

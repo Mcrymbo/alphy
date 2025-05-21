@@ -1,6 +1,8 @@
 "use server"
 
-import { createServerSupabaseClient } from "./auth"
+import { requireAuth, getCurrentUser } from "./auth"
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
 import type { ResumeData } from "@/lib/types"
 
 // Default resume data to use as fallback
@@ -42,10 +44,15 @@ const defaultResumeData: ResumeData = {
   },
 }
 
+function createDbClient() {
+  const cookieStore = cookies()
+  return createRouteHandlerClient({ cookies: () => cookieStore })
+}
+
 export async function getResumeData(): Promise<ResumeData> {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = createDbClient()
+    const user = await getCurrentUser()
 
     if (!user) {
       console.log("No authenticated user, returning default data")
@@ -58,16 +65,13 @@ export async function getResumeData(): Promise<ResumeData> {
       .eq("user_id", user.id)
       .single()
 
-    if (error) {
-      if (error.code === "PGRST116") {
-        console.log("No resume found for user, returning default data")
-        return defaultResumeData
-      }
-      console.error("Error getting resume data:", error)
-      throw error
+    if (error?.code === "PGRST116") {
+      console.log("No resume found for user, returning default data")
+      return defaultResumeData
     }
+    if (error) throw error
 
-    return data.data as ResumeData
+    return data?.data as ResumeData ?? defaultResumeData
   } catch (error) {
     console.error("Error getting resume data:", error)
     return defaultResumeData
@@ -76,14 +80,10 @@ export async function getResumeData(): Promise<ResumeData> {
 
 export async function updateResumeData(resumeData: ResumeData): Promise<void> {
   try {
-    const supabase = await createServerSupabaseClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    // Require authentication for write operations
+    const user = await requireAuth()
+    const supabase = createDbClient()
 
-    if (!user) {
-      throw new Error("User not authenticated")
-    }
-
-    // Upsert resume data for the current user
     const { error } = await supabase
       .from("resume")
       .upsert({
@@ -93,10 +93,7 @@ export async function updateResumeData(resumeData: ResumeData): Promise<void> {
       })
       .eq("user_id", user.id)
 
-    if (error) {
-      console.error("Error updating resume data:", error)
-      throw error
-    }
+    if (error) throw error
   } catch (error) {
     console.error("Error updating resume data:", error)
     throw new Error("Failed to update resume data. Please try again.")
@@ -105,11 +102,11 @@ export async function updateResumeData(resumeData: ResumeData): Promise<void> {
 
 export async function getResumeFileUrl(userId?: string): Promise<string> {
   try {
-    const supabase = await createServerSupabaseClient()
+    const supabase = createDbClient()
     
     // If no userId provided, get current user's ID
     if (!userId) {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await getCurrentUser()
       if (!user) return "#"
       userId = user.id
     }

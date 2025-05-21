@@ -1,10 +1,14 @@
+export interface ImageObject {
+  url: string;
+}
+
 export interface Project {
     id: string
     title: string
     slug: string
     description: string
     content: string
-    image: string
+    image: string | ImageObject;
     technologies: string[]
     date: string
     role: string

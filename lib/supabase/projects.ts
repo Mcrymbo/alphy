@@ -1,6 +1,8 @@
 "use server"
 
-import { createServerSupabaseClient } from "./auth"
+import { requireAuth } from "./auth"
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
 import type { Project } from "@/lib/types"
 
 // Sample projects data to use as fallback
@@ -46,110 +48,101 @@ const sampleProjects: Omit<Project, "id">[] = [
   },
 ]
 
+// Helper function to create Supabase client for database operations
+function createDbClient() {
+  const cookieStore = cookies()
+  return createRouteHandlerClient({ cookies: () => cookieStore })
+}
+
 export async function getProjects(): Promise<Project[]> {
   try {
-    const supabase = await createServerSupabaseClient()
+    const supabase = createDbClient()
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .order("date", { ascending: false })
 
-    const { data, error } = await supabase.from("projects").select("*").order("date", { ascending: false })
+    if (error) throw error
 
-    if (error) {
-      console.error("Error getting projects:", error)
-      throw error
-    }
-
-    if (!data || data.length === 0) {
-      console.log("No projects found in Supabase, using sample data")
-      return sampleProjects.map((project, index) => ({
-        id: `sample-${index}`,
-        ...project,
-      }))
-    }
-
-    return data as Project[]
+    return data?.length ? (data as Project[]) : getSampleProjects()
   } catch (error) {
     console.error("Error getting projects:", error)
-    console.log("Using sample projects data due to error")
-    // Return sample data instead of an empty array
-    return sampleProjects.map((project, index) => ({
-      id: `sample-${index}`,
-      ...project,
-    }))
+    return getSampleProjects()
   }
 }
 
 export async function getProjectBySlug(slug: string): Promise<Project | null> {
   try {
-    const supabase = await createServerSupabaseClient()
+    const supabase = createDbClient()
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .eq("slug", slug)
+      .single()
 
-    const { data, error } = await supabase.from("projects").select("*").eq("slug", slug).single()
-
-    if (error) {
-      if (error.code === "PGRST116") {
-        // No rows returned - try to find in sample data
-        const sampleProject = sampleProjects.find((p) => p.slug === slug)
-        if (sampleProject) {
-          return {
-            id: `sample-${slug}`,
-            ...sampleProject,
-          }
-        }
-        return null
-      }
-
-      console.error("Error getting project by slug:", error)
-      throw error
+    if (error?.code === "PGRST116") {
+      return getSampleProjectBySlug(slug)
     }
+    if (error) throw error
 
     return data as Project
   } catch (error) {
-    console.error("Error getting project by slug:", error)
-    // Try to find the project in sample data
-    const sampleProject = sampleProjects.find((p) => p.slug === slug)
-    if (sampleProject) {
-      return {
-        id: `sample-${slug}`,
-        ...sampleProject,
-      }
-    }
-    return null
+    console.error("Error getting project:", error)
+    return getSampleProjectBySlug(slug)
   }
 }
 
 export async function addProject(projectData: Omit<Project, "id">): Promise<string> {
+  // Require authentication for write operations
+  await requireAuth()
+
   try {
-    const supabase = await createServerSupabaseClient()
+    const supabase = createDbClient()
+    const { data, error } = await supabase
+      .from("projects")
+      .insert(projectData)
+      .select()
+      .single()
 
-    const { data, error } = await supabase.from("projects").insert(projectData).select().single()
-
-    if (error) {
-      console.error("Error adding project:", error)
-      throw error
-    }
-
+    if (error) throw error
     return data.id
   } catch (error) {
     console.error("Error adding project:", error)
-    throw new Error("Failed to add project. Please check your Supabase permissions.")
+    throw new Error("Failed to add project. Please try again.")
   }
 }
 
 export async function deleteProject(id: string): Promise<void> {
+  // Require authentication for delete operations
+  await requireAuth()
+
+  if (id.startsWith("sample-")) {
+    throw new Error("Cannot delete sample projects")
+  }
+
   try {
-    // Don't attempt to delete sample projects
-    if (id.startsWith("sample-")) {
-      throw new Error("Cannot delete sample projects")
-    }
+    const supabase = createDbClient()
+    const { error } = await supabase
+      .from("projects")
+      .delete()
+      .eq("id", id)
 
-    const supabase = await createServerSupabaseClient()
-
-    const { error } = await supabase.from("projects").delete().eq("id", id)
-
-    if (error) {
-      console.error("Error deleting project:", error)
-      throw error
-    }
+    if (error) throw error
   } catch (error) {
     console.error("Error deleting project:", error)
-    throw new Error("Failed to delete project. Please check your Supabase permissions.")
+    throw new Error("Failed to delete project. Please try again.")
   }
+}
+
+// Helper functions for sample data
+function getSampleProjects(): Project[] {
+  return sampleProjects.map((project, index) => ({
+    id: `sample-${index}`,
+    ...project,
+  }))
+}
+
+function getSampleProjectBySlug(slug: string): Project | null {
+  const project = sampleProjects.find(p => p.slug === slug)
+  return project ? { id: `sample-${slug}`, ...project } : null
 }

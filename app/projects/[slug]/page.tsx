@@ -51,8 +51,13 @@ export default async function ProjectPage({
     notFound()
   }
 
+  const imageSrc =
+    typeof project.image === "string"
+      ? project.image
+      : project.image?.url ?? "/placeholder.svg"
+
   return (
-    <main className="container px-4 md:px-6 py-12">
+    <main className="container mx-auto px-4 md:px-6 py-12">
       <Link href="/projects">
         <Button variant="ghost" className="mb-6 gap-2">
           <ArrowLeft size={16} /> Back to Projects
@@ -62,7 +67,7 @@ export default async function ProjectPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2">
           <div className="relative aspect-video rounded-lg overflow-hidden mb-6">
-            <Image src={project.image || "/placeholder.svg"} alt={project.title} fill className="object-cover" />
+             <Image src={imageSrc} alt={project.title} fill className="object-cover" />
           </div>
 
           <h1 className="text-4xl font-bold tracking-tight mb-4">{project.title}</h1>

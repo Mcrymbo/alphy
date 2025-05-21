@@ -7,42 +7,47 @@ import {
 } from "@supabase/auth-helpers-nextjs"
 import { redirect } from "next/navigation"
 
-
-export async function createServerSupabaseClient() {
-  const cookieStore = cookies()
-  return createRouteHandlerClient({ cookies: () => cookieStore })
+// For Server Components (read-only)
+export async function getCurrentUser() {
+  const supabase = createServerComponentClient({ cookies })
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    return user
+  } catch (error) {
+    console.error('Error fetching current user:', error)
+    return null
+  }
 }
 
-// Server Action (can set cookies)
+// For Route Handlers and Server Actions (read-write)
 export async function signIn(email: string, password: string) {
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  const supabase = createRouteHandlerClient({ cookies })
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('Sign in error:', error.message)
+    throw new Error('Invalid login credentials')
+  }
+  
   return { success: true }
 }
 
-// Read-only (can only get cookies)
-export async function getCurrentUser() {
-  const cookieStore = cookies()
-  const supabase = createServerComponentClient({ cookies: () => cookieStore })
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  return user
-}
-
 export async function signOut() {
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  const supabase = createRouteHandlerClient({ cookies })
   const { error } = await supabase.auth.signOut()
-  if (error) throw new Error(error.message)
+  
+  if (error) {
+    console.error('Sign out error:', error.message)
+    throw new Error('Failed to sign out')
+  }
+  
   return { success: true }
 }
 
 export async function requireAuth() {
   const user = await getCurrentUser()
-  if (!user) redirect("/admin/login")
+  if (!user) {
+    redirect("/admin/login?message=Please sign in to access this page")
+  }
   return user
 }

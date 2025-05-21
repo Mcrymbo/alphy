@@ -1,6 +1,8 @@
 "use server"
 
-import { createServerSupabaseClient } from "./auth"
+import { requireAuth} from "./auth"
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
 import type { ContactMessage } from "@/lib/types"
 
 interface ContactFormData {
@@ -10,19 +12,25 @@ interface ContactFormData {
   message: string
 }
 
-export async function submitContactForm(formData: ContactFormData): Promise<void> {
+// Create a database client with proper cookie handling
+function createDbClient() {
+  const cookieStore = cookies()
+  return createRouteHandlerClient({ cookies: () => cookieStore })
+}
+
+export async function submitContactForm(formData: ContactFormData): Promise<{ success: boolean }> {
   try {
-    const supabase = await createServerSupabaseClient()
+    const supabase = createDbClient()
 
     const { error } = await supabase.from("messages").insert({
       ...formData,
       timestamp: new Date().toISOString(),
+      read: false // Add read status flag
     })
 
-    if (error) {
-      console.error("Error submitting contact form:", error)
-      throw error
-    }
+    if (error) throw error
+
+    return { success: true }
   } catch (error) {
     console.error("Error submitting contact form:", error)
     throw new Error("Failed to submit contact form. Please try again later.")
@@ -31,35 +39,54 @@ export async function submitContactForm(formData: ContactFormData): Promise<void
 
 export async function getMessages(): Promise<ContactMessage[]> {
   try {
-    const supabase = await createServerSupabaseClient()
+    // Require authentication for accessing messages
+    await requireAuth()
+    const supabase = createDbClient()
 
-    const { data, error } = await supabase.from("messages").select("*").order("timestamp", { ascending: false })
+    const { data, error } = await supabase
+      .from("messages")
+      .select("*")
+      .order("timestamp", { ascending: false })
 
-    if (error) {
-      console.error("Error getting messages:", error)
-      throw error
-    }
+    if (error) throw error
 
     return (data || []) as ContactMessage[]
   } catch (error) {
     console.error("Error getting messages:", error)
-    // Return empty array instead of throwing
     return []
+  }
+}
+
+export async function markAsRead(id: string): Promise<void> {
+  try {
+    await requireAuth()
+    const supabase = createDbClient()
+
+    const { error } = await supabase
+      .from("messages")
+      .update({ read: true, read_at: new Date().toISOString() })
+      .eq("id", id)
+
+    if (error) throw error
+  } catch (error) {
+    console.error("Error marking message as read:", error)
+    throw new Error("Failed to update message status.")
   }
 }
 
 export async function deleteMessage(id: string): Promise<void> {
   try {
-    const supabase = await createServerSupabaseClient()
+    await requireAuth()
+    const supabase = createDbClient()
 
-    const { error } = await supabase.from("messages").delete().eq("id", id)
+    const { error } = await supabase
+      .from("messages")
+      .delete()
+      .eq("id", id)
 
-    if (error) {
-      console.error("Error deleting message:", error)
-      throw error
-    }
+    if (error) throw error
   } catch (error) {
     console.error("Error deleting message:", error)
-    throw new Error("Failed to delete message. Please check your Supabase permissions.")
+    throw new Error("Failed to delete message. Please try again.")
   }
 }
