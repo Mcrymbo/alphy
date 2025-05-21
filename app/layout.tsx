@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   title: "Alphonce Mcrymbo | Full Stack Developer",
   description:
     "Portfolio of Alphonce Mcrymbo, a Full Stack Developer with expertise in Django, Flask, React, Next.js, and Tailwind CSS.",
+  icons: {
+    icon: '/logo.png'
+  }
 }
 
 export default function RootLayout({

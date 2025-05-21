@@ -1,11 +1,11 @@
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowRight, Download, Github, Linkedin, Mail } from "lucide-react"
+import { ArrowRight, Github, Linkedin, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { getResumeFileUrl } from "@/lib/supabase/resume"
+// import { getResumeFileUrl } from "@/lib/supabase/resume"
 
 export default async function HeroSection() {
-  const resumeFileUrl = await getResumeFileUrl()
+  // const resumeFileUrl = await getResumeFileUrl()
   return (
     <section className="relative py-20 md:py-32 overflow-hidden">
       {/* Background Pattern */}
@@ -36,11 +36,11 @@ export default async function HeroSection() {
                   View My Work <ArrowRight size={16} />
                 </Button>
               </Link>
-              <Link href={resumeFileUrl} target="_blank" rel="noopener noreferrer">
+              {/* <Link href={resumeFileUrl} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" variant="outline" className="gap-2">
                   Download CV <Download size={16} />
                 </Button>
-              </Link>
+              </Link> */}
             </div>
 
             <div className="flex items-center gap-4 mt-8">

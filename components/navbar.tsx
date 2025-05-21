@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { cn } from "@/lib/utils"
 import { useMobile } from "@/hooks/use-mobile"
+import Image from "next/image"
 
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/projects", label: "Projects" },
-  { href: "/resume", label: "Resume" },
+  // { href: "/resume", label: "Resume" },
   { href: "/contact", label: "Contact" },
 ]
 
@@ -39,10 +40,11 @@ export default function Navbar() {
     <header
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-200",
-        scrolled ? "bg-background/80 backdrop-blur-md border-b" : "bg-transparent",
+        scrolled ? "bg-background/80 border-b" : "bg-transparent",
       )}
     >
       <div className="container mx-auto flex h-16 items-center justify-between">
+        <Image src='/logo.png' alt="Alphonce Mcrymbo" width={60} height={60} className='bg-white rounded-full'/>
         <Link href="/" className="font-bold text-xl">
           Alphonce<span className="text-primary">Mcrymbo</span>
         </Link>
