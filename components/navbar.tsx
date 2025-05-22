@@ -43,10 +43,10 @@ export default function Navbar() {
         scrolled ? "bg-background/80 border-b" : "bg-transparent",
       )}
     >
-      <div className="container mx-auto flex h-16 items-center justify-between">
-        <Link href="/" className="font-bold text-xl">
+      <div className="container mx-auto flex h-auto p-2 items-center justify-between">
+        <Link href="/" className="font-bold text-xl flex flex-col items-center">
           <Image src='/logo.png' alt="Alphonce Mcrymbo" width={60} height={60} className='bg-white rounded-full'/>
-          Alphonce<span className="text-primary">Mcrymbo</span>
+          <div>Alphonce<span className="text-primary">Mcrymbo</span></div>
         </Link>
 
         {/* Desktop Navigation */}
