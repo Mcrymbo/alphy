@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getProjectBySlug, getProjects } from "@/lib/supabase/projects"
 
-export const dynamic = 'force-dynamic';
-
 type Params = {
   slug: string
 }

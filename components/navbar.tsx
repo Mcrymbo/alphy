@@ -44,8 +44,8 @@ export default function Navbar() {
       )}
     >
       <div className="container mx-auto flex h-16 items-center justify-between">
-        <Image src='/logo.png' alt="Alphonce Mcrymbo" width={60} height={60} className='bg-white rounded-full'/>
         <Link href="/" className="font-bold text-xl">
+          <Image src='/logo.png' alt="Alphonce Mcrymbo" width={60} height={60} className='bg-white rounded-full'/>
           Alphonce<span className="text-primary">Mcrymbo</span>
         </Link>
 

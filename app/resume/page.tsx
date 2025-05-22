@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getResumeData, getResumeFileUrl } from "@/lib/supabase/resume"
 
-export const dynamic = 'force-dynamic';
-
 export const metadata: Metadata = {
   title: "Resume | Alphonce Mcrymbo",
   description: "Professional resume of Alphonce Mcrymbo, a Full Stack Developer with 3 years of experience.",

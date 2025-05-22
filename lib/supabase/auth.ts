@@ -9,7 +9,8 @@ import { redirect } from "next/navigation"
 
 // For Server Components (read-only)
 export async function getCurrentUser() {
-  const supabase = createServerComponentClient({ cookies })
+  const cookieStore = cookies()
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
   try {
     const { data: { user } } = await supabase.auth.getUser()
     return user
@@ -21,7 +22,8 @@ export async function getCurrentUser() {
 
 // For Route Handlers and Server Actions (read-write)
 export async function signIn(email: string, password: string) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const cookieStore = cookies()
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
@@ -33,7 +35,8 @@ export async function signIn(email: string, password: string) {
 }
 
 export async function signOut() {
-  const supabase = createRouteHandlerClient({ cookies })
+  const cookieStore = cookies()
+  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
   const { error } = await supabase.auth.signOut()
   
   if (error) {
